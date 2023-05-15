@@ -1,11 +1,13 @@
-
-const modeBtn = document.getElementById("mode-btn")
-const destroyBtn = document.getElementById("destroy-btn")
-const eraserBtn = document.getElementById("eraser-btn")
+const saveBtn = document.getElementById("save");
+const textInput = document.getElementById("text");
+const fileInput = document.getElementById("file");
+const modeBtn = document.getElementById("mode-btn");
+const destroyBtn = document.getElementById("destroy-btn");
+const eraserBtn = document.getElementById("eraser-btn");
 // arraylike 객체를 foreach 사용 위해 배열로 만들기
-const colorOptions = Array.from(document.getElementsByClassName("color-option"))
-const color = document.getElementById("color")
-const lineWidth = document.getElementById("line-width")
+const colorOptions = Array.from(document.getElementsByClassName("color-option"));
+const color = document.getElementById("color");
+const lineWidth = document.getElementById("line-width");
 const canvas = document.querySelector("canvas");
 const ctx = canvas.getContext("2d");
 
@@ -15,6 +17,7 @@ const CANVAS_HEIGHT = 800;
 canvas.width = 800;
 canvas.height = 800;
 ctx.lineWidth = lineWidth.value;
+ctx.lineCap = "round"; // 선을 둥글게
 let isPainting = false; //평소 마우스를 클릭하지 않는 경우: false
 let isFilling = false; //
 
@@ -62,13 +65,13 @@ function onColorClick(event) {
 function onModeClick(){
     // 그리기 모드
     if(isFilling){
-        isFilling = false
-        modeBtn.innerText = "Fill"
+        isFilling = false;
+        modeBtn.innerText = "Fill";
     }
     // 채우기 모드
     else{
-        isFilling = true
-        modeBtn.innerText = "Draw"
+        isFilling = true;
+        modeBtn.innerText = "Draw";
     }
 }
 
@@ -89,7 +92,41 @@ function onEraserClick() {
     modeBtn.innerText = "Fill";
 }
 
+function onFileChange(event) {
+    const file = event.target.files[0]
+    const url = URL.createObjectURL(file);
+    const image = new Image()   //html의 <img src=""/>와 동일
+    image.src = url;
+    image.onload = function() {
+        ctx.drawImage(image, 0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+        fileInput.value = null;
+    }
+}
 
+function onDoubleClick(event){
+    const text = textInput.value;
+    if(text !== "") {
+        ctx.save();
+        ctx.lineWidth = 1;
+        ctx.font = "48px serif"
+        // ctx.strokeText , ctx.fillText
+        ctx.fillText(text, event.offsetX, event.offsetY);
+        ctx.restore();
+    }
+}
+
+function onSaveClick(){
+    // 이미지 데이터 url 불러오기
+    const url = canvas.toDataURL();
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "myDrawing.png";
+    a.click();
+}
+
+canvas.addEventListener("dblclick", onDoubleClick);
+// canvas.onmousemove = function(){}
+// canvas.onmousemove = onMove
 canvas.addEventListener("mousemove", onMove);
 canvas.addEventListener("mousedown", startPainting);
 canvas.addEventListener("mouseup", cancelPainting);
@@ -107,5 +144,7 @@ color.addEventListener("change", onColorChange);
 colorOptions.forEach(color => color.addEventListener("click", onColorClick));
 
 modeBtn.addEventListener("click", onModeClick);
-destroyBtn.addEventListener("click", onDestroyClick)
-eraserBtn.addEventListener("click", onEraserClick)
+destroyBtn.addEventListener("click", onDestroyClick);
+eraserBtn.addEventListener("click", onEraserClick);
+fileInput.addEventListener("change", onFileChange);
+saveBtn.addEventListener("click", onSaveClick);
